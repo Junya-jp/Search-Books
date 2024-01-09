@@ -54,7 +54,7 @@ const SearchBooks = () => {
       // Save the book to the server
       bookData.forEach(async (book) => {
         await saveBookMutation({
-          variables: { userId: Auth.getUserId(), bookData: book },
+          variables: { userId: Auth.getProfile(), bookData: book },
         });
       });
     } catch (err) {
