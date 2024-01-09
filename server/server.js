@@ -1,39 +1,54 @@
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
-const mongoose = require('mongoose');
-const { typeDefs } = require('./typeDefs');
-const { resolvers } = require('./resolvers');
-const { verifyToken } = require('./utils/auth');
-const { User } = require('./models');
-
-const app = express();
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: async ({ req }) => {
-    // Get the token from the request headers
-    const token = req.headers.authorization || '';
-
-    // Verify the token and get user information
-    const user = await verifyToken(token);
-
-    return { user };
-  },
-});
-
-server.applyMiddleware({ app });
+const http = require('http');
+const path = require('path'); 
+const { typeDefs, resolvers } = require('./schemas');
+const db = require('./config/connection');
+const routes = require('./routes');
+const cors = require('cors');
 
 const PORT = process.env.PORT || 3001;
 
-mongoose.connect('mongodb://localhost:27017/googlebooks', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-mongoose.connection.once('open', () => {
-  console.log('Connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+async function startApolloServer() {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
   });
-});
+
+  await server.start();
+
+  const app = express();
+
+  // Set maxHttpHeaderSize
+  app.server = http.createServer(app);
+  app.server.maxHttpHeaderSize = 32768;
+
+  // Apply CORS middleware
+  app.use(cors());
+
+  // Apply Apollo Server middleware
+  server.applyMiddleware({ app });
+
+  // Parse URL-encoded and JSON request bodies
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
+
+  // Serve static files (only in production)
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/build')));
+  }
+
+  // Include your routes
+  app.use(routes);
+
+  // Open the database connection
+  db.once('open', () => {
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`🌍 Now listening on localhost:${PORT}`);
+      console.log(`🚀 GraphQL playground at http://localhost:${PORT}/graphql`);
+    });
+  });
+}
+
+startApolloServer();

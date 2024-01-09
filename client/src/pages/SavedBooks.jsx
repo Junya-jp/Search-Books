@@ -21,7 +21,6 @@ const SavedBooks = () => {
   const { loading, data } = useQuery(GET_ME);
 
   useEffect(() => {
-    // Update the user data when the GET_ME query data changes
     if (data && data.me) {
       setUserData(data.me);
     }
@@ -38,14 +37,14 @@ const SavedBooks = () => {
     }
 
     try {
-      // Use the removeBook mutation from Apollo Client
+      
       const { data } = await removeBook({
         variables: { bookId: bookId },
       });
 
       const updatedUser = data.removeBook; 
       setUserData(updatedUser);
-      // upon success, remove book's id from localStorage
+      
       removeBookId(bookId);
     } catch (err) {
       console.error(err);

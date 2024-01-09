@@ -19,20 +19,13 @@ const LoginForm = () => {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    // check if form has everything (as per react-bootstrap docs)
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
     try {
       // Use the login mutation from Apollo Client
       const { data } = await login({
         variables: { ...userFormData },
       });
 
-      const { token, user } = data.login;  // Update with the correct data structure
+      const { token, user } = data.login;   
       console.log(user);
       Auth.login(token);
     } catch (err) {

@@ -36,7 +36,7 @@ const SignupForm = () => {
 
       console.log(data);  
 
-      const { token, user } = data.addUser;  // Update with the correct data structure
+      const { token, user } = data.addUser;  
       console.log(user);
       Auth.login(token);
     } catch (err) {

@@ -17,3 +17,15 @@ query getMe($id:ID!){
     }
 }
 `;
+
+/*export const SEARCH_GOOGLE_BOOKS = gql`
+  query SearchGoogleBooks($searchInput: String!) {
+    searchGoogleBooks(searchInput: $searchInput) {
+      bookId
+      authors
+      title
+      description
+      image
+    }
+  }
+`;*/
