@@ -1,21 +1,39 @@
 const express = require('express');
-const path = require('path');
-const db = require('./config/connection');
-const routes = require('./routes');
+const { ApolloServer } = require('apollo-server-express');
+const mongoose = require('mongoose');
+const { typeDefs } = require('./typeDefs');
+const { resolvers } = require('./resolvers');
+const { verifyToken } = require('./utils/auth');
+const { User } = require('./models');
 
 const app = express();
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    // Get the token from the request headers
+    const token = req.headers.authorization || '';
+
+    // Verify the token and get user information
+    const user = await verifyToken(token);
+
+    return { user };
+  },
+});
+
+server.applyMiddleware({ app });
+
 const PORT = process.env.PORT || 3001;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+mongoose.connect('mongodb://localhost:27017/googlebooks', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-// if we're in production, serve client/build as static assets
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-}
-
-app.use(routes);
-
-db.once('open', () => {
-  app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
+mongoose.connection.once('open', () => {
+  console.log('Connected to MongoDB');
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 });
